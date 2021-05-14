@@ -1,0 +1,23 @@
+UserDBTable:
+  Type: 'AWS::DynamoDB::Table'
+  # DeletionPolicy: Retain # Prevents a table from being dropped by mistake
+  Properties:
+    TableName: ${self:provider.environment.USER_TABLE}
+    PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+    AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: email
+        AttributeType: S
+    KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+    BillingMode: PAY_PER_REQUEST
+    GlobalSecondaryIndexes:
+      - IndexName: emailIndex
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL

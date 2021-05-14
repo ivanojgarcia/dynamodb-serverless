@@ -1,0 +1,48 @@
+service: ms-tech-dynamo
+frameworkVersion: '2'
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  stage: ${opt:stage, 'dev'}
+  iamRoleStatements:
+    - ${file(src/iam/UserTableIAM.yml):UserTableIAM}
+
+  environment:
+    USER_TABLE: tb-${self:provider.stage}-${file(src/config/config.${self:provider.stage}.json):USER_TABLE}
+
+resources:
+  Resources:
+    UserDBTable: ${file(src/resources/tables/user.yml):UserDBTable}
+
+functions:
+  createUser:
+    handler: src/handlers/createUser.handler
+    events:
+      - http:
+          method: POST
+          path: /user
+  getUsers:
+    handler: src/handlers/getUsers.handler
+    events:
+      - http:
+          method: GET
+          path: /users
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-pseudo-parameters
+custom:
+  UserTable:
+    name: !Ref UserDBTable
+    arn: !GetAtt UserDBTable.Arn
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true # enable auto-packing of external modules
+  serverless-offline:
+    useChildProcesses: true
